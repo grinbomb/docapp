@@ -210,6 +210,14 @@ public class DocumentService {
 	public List<Document> findByName(String name) {
 		return docRepo.findByName(name);
 	}
+	
+	public List<Document> findByNameAndAuthorId(String name, Long id) {
+		return docRepo.findByNameAndAuthorId(name, id);
+	}
+	
+	public List<SharedDocument> findByDocumentNameAndUserShared(String documentName, User user) {
+		return shrdDocRepo.findByDocumentNameAndUser(documentName, user);
+	}
 
 	public SharedDocument findByUserAndDocumentShared(User user, @Valid Document document) {
 		return shrdDocRepo.findByUserAndDocument(user, document);

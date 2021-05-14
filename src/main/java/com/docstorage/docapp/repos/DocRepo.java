@@ -11,4 +11,5 @@ public interface DocRepo extends JpaRepository<Document, Long> {
 
 	Document findByNameAndFileType(String name, String fileType);
 	List<Document> findByName(String name);
+	List<Document> findByNameAndAuthorId(String name, Long authorId);
 }

@@ -41,7 +41,7 @@
 		</div>
   	</div>
 
-  	<button type="submit" class="btn btn-danger">Create</button>
+  	<button type="submit" class="btn btn-danger">Confirm</button>
   	
   	<input type="hidden" name="_csrf" value="${_csrf.token}" />
 	</form>
@@ -57,19 +57,20 @@
 		 ${messageDoc}
 		</div>
 	</#if>
-	<#if docs??>
+	
 	
 	<form method="get" enctype="multipart/form-data" action="/">
 		<div class="form-row mt-3">
 			<label for="filtertag">Document name</label>
     		<div class="form-group col-md-3">
-    			<input type="text" name="filtertag" class="form-control" autocomplete="off" id="filtertag">
+    			<input type="text" name="filtertag" class="form-control" autocomplete="off" id="filtertag" value="<#if filtertag??>${filtertag}</#if>">
     		</div>
     		<div class="form-group col-md-2">
     			<button type="submit" class="btn btn-primary">Find</button>
     		</div>
     	</div>
 	</form>
+	<#if docs??>
 	<form method="post" enctype="multipart/form-data" action="/share">
 	<h2>My documents</h2>
 	<div class="form-row">

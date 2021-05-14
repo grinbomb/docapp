@@ -84,7 +84,11 @@ public class MainDocumentController {
 			List<SharedDocument> shareddocs = docService.findByUserIdShared(user);
 
 			if (filtertag != null && filtertag != "") {
-				docs = docService.findByName(filtertag);
+				model.addAttribute("filtertag", filtertag);
+				docs = docService.findByNameAndAuthorId(filtertag, user.getId());
+				shareddocs = docService.findByDocumentNameAndUserShared(filtertag, user);
+			}else {
+				model.addAttribute("filtertag", "");
 			}
 
 			if (!users.isEmpty())

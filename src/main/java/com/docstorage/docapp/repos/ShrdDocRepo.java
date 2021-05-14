@@ -13,4 +13,5 @@ public interface ShrdDocRepo extends JpaRepository<SharedDocument, Long>{
 	List<SharedDocument> findByUserId(Long userId);
 	SharedDocument findByUserAndDocument(User user, Document document);
 	void deleteByDocumentId(Long documentId);
+	List<SharedDocument> findByDocumentNameAndUser(String name, User user);
 }
