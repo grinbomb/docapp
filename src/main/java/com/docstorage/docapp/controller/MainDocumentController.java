@@ -162,7 +162,7 @@ public class MainDocumentController {
 		}
 
 		docForDB.setDate(todayDate);
-		docForDB.setBinaryFile(fileBinary.toString().getBytes());
+		docForDB.setBinaryFile(fileBinary.toString());
 
 		if (bindingResult.hasErrors()) {
 			model.addAttribute("messageDoc", null);
