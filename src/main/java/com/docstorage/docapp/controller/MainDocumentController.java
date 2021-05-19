@@ -265,23 +265,22 @@ public class MainDocumentController {
 
 	@GetMapping("/openfile/{id}")
 	public ResponseEntity<byte[]> getPDF1(@PathVariable("id") Document document) {
-
+        String filename = document.getName() + document.getFileType();
+        String contentType;
+        if(document.getFileType().equals(".pdf"))
+        	contentType = "application/pdf";
+        else
+        	contentType = "application/octet-stream";
+        
 		HttpHeaders headers = new HttpHeaders();
 
-		headers.setContentType(MediaType.parseMediaType("application/octet-stream"));
-		String filename = document.getName() + document.getFileType();
+		headers.setContentType(MediaType.parseMediaType(contentType));
+		
 
 		headers.add("content-disposition", "inline;filename=" + filename);
 
 		headers.setContentDispositionFormData(filename, filename);
-		headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
-
-		Byte[] bytes = document.getBinaryFile();
-		byte[] bytesPrimary = new byte[bytes.length];
-	    for(int i = 0; i < bytes.length; i++){
-	    	bytesPrimary[i] = bytes[i];
-	    }
-		
+		headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");		
 		
 		ResponseEntity<byte[]> response = new ResponseEntity<byte[]>(document.getBody().getBytes(), headers,
 				HttpStatus.OK);
