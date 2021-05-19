@@ -262,29 +262,27 @@ public class MainDocumentController {
 		return "redirect:/";
 
 	}
-
+	
 	@GetMapping("/openfile/{id}")
-	public ResponseEntity<byte[]> getPDF1(@PathVariable("id") Document document) {
-        String filename = document.getName() + document.getFileType();
-        String contentType;
-        if(document.getFileType().equals(".pdf"))
-        	contentType = "application/pdf";
-        else
-        	contentType = "application/octet-stream";
-        
+	public ResponseEntity<InputStreamResource> getPDF2(@PathVariable("id") Document document) throws IOException {
+		String filename = document.getName() + document.getFileType();
+		ClassPathResource pdfFile = new ClassPathResource(filename);
+		String contentType;
+		if(document.getFileType().equals(".pdf"))
+			contentType = "application/pdf";
+		else
+			contentType = "application/octet-stream";
+		
 		HttpHeaders headers = new HttpHeaders();
-
 		headers.setContentType(MediaType.parseMediaType(contentType));
 		
 
-		headers.add("content-disposition", "inline;filename=" + filename);
+		headers.add("content-disposition", "inline; filename=" + filename);
 
 		headers.setContentDispositionFormData(filename, filename);
-		headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");		
+		headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
 		
-		ResponseEntity<byte[]> response = new ResponseEntity<byte[]>(document.getBody().getBytes(), headers,
-				HttpStatus.OK);
-		return response;
+	    return new ResponseEntity(pdfFile, headers, HttpStatus.OK);
 	}
 
 }
