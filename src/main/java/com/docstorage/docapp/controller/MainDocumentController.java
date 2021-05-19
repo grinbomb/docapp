@@ -12,6 +12,7 @@ import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
@@ -162,7 +163,12 @@ public class MainDocumentController {
 		}
 
 		docForDB.setDate(todayDate);
-		docForDB.setBinaryFile(fileBinary.toString());
+		
+		byte[] bytesPrim = fileBinary.toString().getBytes();
+		Byte[] bytes = new Byte[bytesPrim.length];
+		Arrays.setAll(bytes, n -> bytesPrim[n]);
+		
+		docForDB.setBinaryFile(bytes);
 
 		if (bindingResult.hasErrors()) {
 			model.addAttribute("messageDoc", null);
@@ -270,37 +276,14 @@ public class MainDocumentController {
 		headers.setContentDispositionFormData(filename, filename);
 		headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
 
-		StringBuilder sb = new StringBuilder();
-		File file = new File(uploadPath + document.getName() + document.getFileType());
-		try {
-
-			FileWriter fileWriter = new FileWriter(file, false);
-
-			if (!file.exists())
-				file.createNewFile();
-
-			fileWriter.write(document.getBody());
-			fileWriter.close();
-
-			DataInputStream input = new DataInputStream(new FileInputStream(file));
-			try {
-				while (true) {
-					sb.append(Integer.toBinaryString(input.readByte()));
-				}
-			} catch (EOFException eof) {
-			} catch (IOException e) {
-				e.printStackTrace();
-			} finally {
-				input.close();
-			}
-		} catch (FileNotFoundException e2) {
-			e2.printStackTrace();
-		} catch (IOException e1) {
-			e1.printStackTrace();
-		}
-		String fileBinary = sb.toString();
-
-		ResponseEntity<byte[]> response = new ResponseEntity<byte[]>(fileBinary.toString().getBytes(), headers,
+		Byte[] bytes = document.getBinaryFile();
+		byte[] bytesPrimary = new byte[bytes.length];
+	    for(int i = 0; i < bytes.length; i++){
+	    	bytesPrimary[i] = bytes[i];
+	    }
+		
+		
+		ResponseEntity<byte[]> response = new ResponseEntity<byte[]>(document.getBody().getBytes(), headers,
 				HttpStatus.OK);
 		return response;
 	}

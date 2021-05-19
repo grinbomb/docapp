@@ -47,7 +47,7 @@ public class DocumentServiceTest {
 		Date parsedDate = dateFormat.parse(dateFormat.format(new Date()));
 		Timestamp todayDate = new Timestamp(parsedDate.getTime());
 
-		String arr = new String("1111111");
+		Byte[] arr = new Byte[] { 1, 1, 1, 1, 1, 1, 1, 1, 1 };
 
 		User user = new User();
 		user.setId(1L);

@@ -28,7 +28,7 @@ public class Document {
 	@NotBlank(message = "Description cannot be empty")
 	private String body;
 
-	private String binaryFile;
+	private Byte[] binaryFile;
 	
 	@ManyToOne
 	@JoinColumn(name = "authorId")
@@ -37,7 +37,7 @@ public class Document {
 	public Document() {
 	}
 
-	public Document(String name, String filetype, Timestamp date, String body, String binaryFile, User author) {
+	public Document(String name, String filetype, Timestamp date, String body, Byte[] binaryFile, User author) {
 		if(!filetype.isEmpty())
 			this.fileType = "."+filetype;
 		else
@@ -82,10 +82,10 @@ public class Document {
 	public void setBody(String body) {
 		this.body = body;
 	}
-	public String getBinaryFile() {
+	public Byte[] getBinaryFile() {
 		return binaryFile;
 	}
-	public void setBinaryFile(String binaryFile) {
+	public void setBinaryFile(Byte[] binaryFile) {
 		this.binaryFile = binaryFile;
 	}
 	public User getAuthor() {
