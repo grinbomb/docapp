@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -19,6 +20,7 @@ import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -271,16 +273,24 @@ public class MainDocumentController {
 	@GetMapping("/openfile/{id}")
 	public ResponseEntity<InputStreamResource> downloadFile2(@PathVariable("id") Document document) throws IOException{
 		
-		File file = new File(uploadPath + document.getName() + document.getFileType());
+		String filename = document.getName() + document.getFileType();
+		
+		File file = new File(uploadPath + filename);
         HttpHeaders headers = new HttpHeaders();
-        headers.add("content-disposition", "inline; filename=" + document.getName() + document.getFileType());
+    
+        ContentDisposition contentDisposition = ContentDisposition.builder("inline")
+        	    .filename(filename, StandardCharsets.UTF_8)
+        	    .build();
+        
+        headers.add("content-disposition", contentDisposition.toString());
         headers.add("Cache-Control", "no-cache, no-store, must-revalidate");
         headers.add("Pragma", "no-cache");
         headers.add("Expires", "0");
 		
 		InputStreamResource resource = new InputStreamResource(new FileInputStream(file));
 
-	    return ResponseEntity.ok()
+	    return ResponseEntity
+	    		.ok()
 	            .headers(headers)
 	            .contentLength(file.length())
 	            .contentType(MediaType.APPLICATION_OCTET_STREAM)

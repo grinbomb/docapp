@@ -1,12 +1,17 @@
 package com.docstorage.docapp.service;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.DataInputStream;
 import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -20,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 
 import com.docstorage.docapp.domain.Document;
@@ -73,7 +79,10 @@ public class DocumentService {
 
 		StringBuilder sb = new StringBuilder();
 
+		String encoding = System.getProperty("file.encoding");
+		
 		File file = new File(uploadPath + document.getName() + document.getFileType());
+		
 		List<SharedDocument> listShd = shrdDocRepo.findByUserId(user.getId());
 		boolean canChange = false;
 		for (SharedDocument sharedDocument : listShd) {
@@ -93,8 +102,10 @@ public class DocumentService {
 
 			try {
 
-				FileWriter fileWriter = new FileWriter(file, false);
-
+	            BufferedWriter fileWriter = new BufferedWriter(
+	                    new OutputStreamWriter(
+	                            new FileOutputStream(file), "Cp1251"));
+				
 				if (!file.exists())
 					file.createNewFile();
 
@@ -139,11 +150,15 @@ public class DocumentService {
 				e1.printStackTrace();
 			}
 
+			
+			
 			try {
+				String dir = uploadPath + "fonts//";
+				PDType0Font font = PDType0Font.load(doc, new File(dir + "arial.ttf"));
 				PDPage page = doc.getPage(0);
 				PDPageContentStream contentStream = new PDPageContentStream(doc, page);
 				contentStream.beginText();
-				contentStream.setFont(PDType1Font.TIMES_ROMAN, 12);
+				contentStream.setFont(font, 12);
 				contentStream.newLineAtOffset(25, 500);
 				contentStream.showText(document.getBody());
 				contentStream.endText();
