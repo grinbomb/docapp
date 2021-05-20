@@ -156,7 +156,7 @@ public class DocumentService {
 				doc.save(file);
 				doc.close();
 
-				DataInputStream input = new DataInputStream(new FileInputStream(document.getBody()));
+				DataInputStream input = new DataInputStream(new FileInputStream(file));
 				try {
 					while (true) {
 						sb.append(Integer.toBinaryString(input.readByte()));

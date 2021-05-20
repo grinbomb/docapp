@@ -126,6 +126,11 @@
   	<input type="hidden" name="_csrf" value="${_csrf.token}"/>
 	</form>
 	</#if>
+	<#if sharedMessage??>
+		<div class="alert alert-info mt-2" role="alert">
+			${sharedMessage}
+		</div>
+	</#if>
 	<#if shareddocs??>
 	<h2 class="mt-4">Documents sent to me</h2>
 	<table class="table my-2">

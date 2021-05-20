@@ -1,11 +1,7 @@
 package com.docstorage.docapp.controller;
 
-import java.io.DataInputStream;
-import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.sql.Timestamp;
@@ -22,10 +18,8 @@ import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -59,6 +53,7 @@ public class MainDocumentController {
 
 	@GetMapping("/")
 	public String main(@RequestParam(required = false) String filtertag, @ModelAttribute("docName") String docName,
+			@ModelAttribute("sharedMessage") String sharedMessage,
 			@ModelAttribute("docType") String docType, @ModelAttribute("docBody") String docBody,
 			@AuthenticationPrincipal User user, Model model) throws UnsupportedEncodingException {
 
@@ -66,6 +61,11 @@ public class MainDocumentController {
 		model.addAttribute("setDOC", "");
 		model.addAttribute("setPDF", "");
 
+		if(sharedMessage.isEmpty())
+			model.addAttribute("sharedMessage", null);
+		else
+			model.addAttribute("sharedMessage", sharedMessage);
+		
 		if (!docName.isEmpty() && !docType.isEmpty() && !docBody.isEmpty()) {
 			Document docForChange = new Document(docName, docType, null, docBody, null, user);
 			model.addAttribute("document", docForChange);
@@ -200,7 +200,8 @@ public class MainDocumentController {
 
 	@PostMapping("/share")
 	public String shareDocs(@RequestParam(required = false) String[] checkeddocs,
-			@RequestParam(required = false) String[] checkedusers, @RequestParam(required = false) String[] readOnly) {
+			@RequestParam(required = false) String[] checkedusers, @RequestParam(required = false) String[] readOnly,
+			RedirectAttributes redirectAttributes) {
 		if (checkeddocs != null && checkedusers != null) {
 			List<Document> docs = new ArrayList<Document>();
 			if (checkeddocs.length == 1)
@@ -232,8 +233,12 @@ public class MainDocumentController {
 			}
 
 			docService.saveSomeDocs(docs, users, readOnlyDocs);
-
 		}
+		
+		if(checkeddocs!=null&&checkedusers!=null)
+				redirectAttributes.addFlashAttribute("sharedMessage", "Selected documents have been sent successfully");
+			else
+				redirectAttributes.addFlashAttribute("sharedMessage", "Submission error, you did not select documents or users");
 		return "redirect:/";
 
 	}
@@ -264,25 +269,22 @@ public class MainDocumentController {
 	}
 	
 	@GetMapping("/openfile/{id}")
-	public ResponseEntity<InputStreamResource> getPDF2(@PathVariable("id") Document document) throws IOException {
-		String filename = document.getName() + document.getFileType();
-		ClassPathResource pdfFile = new ClassPathResource(filename);
-		String contentType;
-		if(document.getFileType().equals(".pdf"))
-			contentType = "application/pdf";
-		else
-			contentType = "application/octet-stream";
+	public ResponseEntity<InputStreamResource> downloadFile2(@PathVariable("id") Document document) throws IOException{
 		
-		HttpHeaders headers = new HttpHeaders();
-		headers.setContentType(MediaType.parseMediaType(contentType));
+		File file = new File(uploadPath + document.getName() + document.getFileType());
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("content-disposition", "inline; filename=" + document.getName() + document.getFileType());
+        headers.add("Cache-Control", "no-cache, no-store, must-revalidate");
+        headers.add("Pragma", "no-cache");
+        headers.add("Expires", "0");
 		
+		InputStreamResource resource = new InputStreamResource(new FileInputStream(file));
 
-		headers.add("content-disposition", "inline; filename=" + filename);
-
-		headers.setContentDispositionFormData(filename, filename);
-		headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
-		
-	    return new ResponseEntity(pdfFile, headers, HttpStatus.OK);
+	    return ResponseEntity.ok()
+	            .headers(headers)
+	            .contentLength(file.length())
+	            .contentType(MediaType.APPLICATION_OCTET_STREAM)
+	            .body(resource);
 	}
 
 }
