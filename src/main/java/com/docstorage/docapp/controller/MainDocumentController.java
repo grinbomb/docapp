@@ -186,6 +186,9 @@ public class MainDocumentController {
 
 		users.remove(userService.findById(user.getId()).get());
 
+		if(docs.isEmpty())
+			docs = null;
+			
 		if (docs != null) {
 			model.addAttribute("docs", docs);
 			model.addAttribute("users", users);
