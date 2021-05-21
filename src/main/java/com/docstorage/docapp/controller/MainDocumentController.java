@@ -55,19 +55,19 @@ public class MainDocumentController {
 
 	@GetMapping("/")
 	public String main(@RequestParam(required = false) String filtertag, @ModelAttribute("docName") String docName,
-			@ModelAttribute("sharedMessage") String sharedMessage,
-			@ModelAttribute("docType") String docType, @ModelAttribute("docBody") String docBody,
-			@AuthenticationPrincipal User user, Model model) throws UnsupportedEncodingException {
+			@ModelAttribute("sharedMessage") String sharedMessage, @ModelAttribute("docType") String docType,
+			@ModelAttribute("docBody") String docBody, @AuthenticationPrincipal User user, Model model)
+			throws UnsupportedEncodingException {
 
 		model.addAttribute("setTXT", "");
 		model.addAttribute("setDOC", "");
 		model.addAttribute("setPDF", "");
 
-		if(sharedMessage.isEmpty())
+		if (sharedMessage.isEmpty())
 			model.addAttribute("sharedMessage", null);
 		else
 			model.addAttribute("sharedMessage", sharedMessage);
-		
+
 		if (!docName.isEmpty() && !docType.isEmpty() && !docBody.isEmpty()) {
 			Document docForChange = new Document(docName, docType, null, docBody, null, user);
 			model.addAttribute("document", docForChange);
@@ -90,7 +90,7 @@ public class MainDocumentController {
 				model.addAttribute("filtertag", filtertag);
 				docs = docService.findByNameAndAuthorId(filtertag, user.getId());
 				shareddocs = docService.findByDocumentNameAndUserShared(filtertag, user);
-			}else {
+			} else {
 				model.addAttribute("filtertag", "");
 			}
 
@@ -146,17 +146,17 @@ public class MainDocumentController {
 					&& !sharedDocument.isReadOnly())
 				canChange = true;
 		}
-		
+
 		if (docForDB != null) {
 			docForDB.setBody(document.getBody());
 
 			if (docForDB.getAuthor() == null)
 				docForDB.setAuthor(user);
-			else if(docForDB.getAuthor().getId().equals(user.getId())||canChange)
+			else if (docForDB.getAuthor().getId().equals(user.getId()) || canChange)
 				model.addAttribute("messageDoc", "The document successfully modified.");
 			else
 				model.addAttribute("errorChangeFile",
-					"The file already exists and you do not have permission to modify it");
+						"The file already exists and you do not have permission to modify it");
 
 		} else {
 			model.addAttribute("messageDoc", "The document successfully created.");
@@ -165,11 +165,11 @@ public class MainDocumentController {
 		}
 
 		docForDB.setDate(todayDate);
-		
+
 		byte[] bytesPrim = fileBinary.toString().getBytes();
 		Byte[] bytes = new Byte[bytesPrim.length];
 		Arrays.setAll(bytes, n -> bytesPrim[n]);
-		
+
 		docForDB.setBinaryFile(bytes);
 
 		if (bindingResult.hasErrors()) {
@@ -177,7 +177,7 @@ public class MainDocumentController {
 			Map<String, String> errors = ControllerUtils.getErrors(bindingResult);
 			model.mergeAttributes(errors);
 		} else {
-			if(docForDB.getAuthor().getId().equals(user.getId())||canChange)
+			if (docForDB.getAuthor().getId().equals(user.getId()) || canChange)
 				docService.save(docForDB);
 		}
 
@@ -199,7 +199,7 @@ public class MainDocumentController {
 
 		return "main";
 	}
-
+	
 	@PostMapping("/share")
 	public String shareDocs(@RequestParam(required = false) String[] checkeddocs,
 			@RequestParam(required = false) String[] checkedusers, @RequestParam(required = false) String[] readOnly,
@@ -236,11 +236,12 @@ public class MainDocumentController {
 
 			docService.saveSomeDocs(docs, users, readOnlyDocs);
 		}
-		
-		if(checkeddocs!=null&&checkedusers!=null)
-				redirectAttributes.addFlashAttribute("sharedMessage", "Selected documents have been sent successfully");
-			else
-				redirectAttributes.addFlashAttribute("sharedMessage", "Submission error, you did not select documents or users");
+
+		if (checkeddocs != null && checkedusers != null)
+			redirectAttributes.addFlashAttribute("sharedMessage", "Selected documents have been sent successfully");
+		else
+			redirectAttributes.addFlashAttribute("sharedMessage",
+					"Submission error, you did not select documents or users");
 		return "redirect:/";
 
 	}
@@ -269,32 +270,40 @@ public class MainDocumentController {
 		return "redirect:/";
 
 	}
-	
-	@GetMapping("/openfile/{id}")
-	public ResponseEntity<InputStreamResource> downloadFile2(@PathVariable("id") Document document) throws IOException{
-		
-		String filename = document.getName() + document.getFileType();
-		
-		File file = new File(uploadPath + filename);
-        HttpHeaders headers = new HttpHeaders();
-    
-        ContentDisposition contentDisposition = ContentDisposition.builder("inline")
-        	    .filename(filename, StandardCharsets.UTF_8)
-        	    .build();
-        
-        headers.add("content-disposition", contentDisposition.toString());
-        headers.add("Cache-Control", "no-cache, no-store, must-revalidate");
-        headers.add("Pragma", "no-cache");
-        headers.add("Expires", "0");
-		
-		InputStreamResource resource = new InputStreamResource(new FileInputStream(file));
 
-	    return ResponseEntity
-	    		.ok()
-	            .headers(headers)
-	            .contentLength(file.length())
-	            .contentType(MediaType.APPLICATION_OCTET_STREAM)
-	            .body(resource);
+	@GetMapping("/openfile/{id}")
+	public ResponseEntity<InputStreamResource> downloadFile2(@AuthenticationPrincipal User user,
+			@PathVariable("id") Document document) throws IOException {
+
+		List<SharedDocument> listShd = docService.findByUserIdShared(user);
+		boolean canDownload = false;
+		for (SharedDocument sharedDocument : listShd) {
+			if (sharedDocument.getDocument().getName().equals(document.getName())
+					&& sharedDocument.getDocument().getFileType().equals(document.getFileType()))
+				canDownload = true;
+		}
+
+		if (canDownload || document.getAuthor().getId().equals(user.getId())) {
+
+			String filename = document.getName() + document.getFileType();
+
+			File file = new File(uploadPath + filename);
+			HttpHeaders headers = new HttpHeaders();
+
+			ContentDisposition contentDisposition = ContentDisposition.builder("inline")
+					.filename(filename, StandardCharsets.UTF_8).build();
+
+			headers.add("content-disposition", contentDisposition.toString());
+			headers.add("Cache-Control", "no-cache, no-store, must-revalidate");
+			headers.add("Pragma", "no-cache");
+			headers.add("Expires", "0");
+
+			InputStreamResource resource = new InputStreamResource(new FileInputStream(file));
+
+			return ResponseEntity.ok().headers(headers).contentLength(file.length())
+					.contentType(MediaType.APPLICATION_OCTET_STREAM).body(resource);
+		} else
+			return ResponseEntity.badRequest().body(null);
 	}
 
 }
